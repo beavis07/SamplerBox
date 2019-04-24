@@ -143,3 +143,6 @@ PANspeed=1                      ; See VIBRspeed
 #         C H O R U S
 CHOdepth=4                      ; 2-15, level of "unsync/untune" of the voices
 CHOgain=0.4                     ; 0.3-0.8, volume of the separate voices
+
+
+START_SCREEN_MESSAGE = Exoskeletons ; Startup screen message

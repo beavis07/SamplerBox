@@ -204,6 +204,8 @@ PITCHRANGE = gv.cp.getint(gv.cfg,"PITCHRANGE".lower())
 PITCHBITS = gv.cp.getint(gv.cfg,"PITCHBITS".lower())
 gv.volume = gv.cp.getint(gv.cfg,"volume".lower())
 gv.volumeCC = gv.cp.getfloat(gv.cfg,"volumeCC".lower())
+START_SCREEN_MESSAGE = gv.cp.get(gv.cfg,"START_SCREEN_MESSAGE".lower())
+USE_HD44780_16x2_LCD_I2C = gv.cp.getboolean(gv.cfg,"USE_HD44780_16x2_LCD_I2C".lower())
 
 ########## read CONFIGURABLE TABLES from config dir
 
@@ -247,9 +249,17 @@ if USE_HD44780_16x2_LCD:
     USE_GPIO=True
     import lcd_16x2
     lcd = lcd_16x2.HD44780()
-    def display(s2,s7=""):
+    def display(s2,s7):
+        lcd.display(s2, s7)
+    display(START_SCREEN_MESSAGE)
+
+elif USE_HD44780_16x2_LCD_I2C
+     import lcd_16x2_i2c
+	 lcd = lcd_16x2_i2c.HD44780_I2C()
+     def display(s2,s7=""):
         lcd.display(s2)
-    display('Start Samplerbox')
+    
+    display(START_SCREEN_MESSAGE)
 
 elif USE_OLED:
     USE_GPIO=True
@@ -257,7 +267,7 @@ elif USE_OLED:
     oled = OLED.oled()
     def display(s2,s7=""):
         oled.display(s2)
-    display('Start Samplerbox')
+    display(START_SCREEN_MESSAGE)
 
 elif USE_I2C_7SEGMENTDISPLAY:
     import I2C_7segment

@@ -34,6 +34,8 @@ if not os.path.isdir(rootprefix):
 sys.path.append('./modules')
 sys.path.append('./modules/lib')
 import gv,getcsv
+import signal
+import sys
 
 ########  Define local general functions ########
 usleep = lambda x: time.sleep(x/1000000.0)
@@ -291,6 +293,13 @@ else:
     def display(seven="", line1="", line2=""):
         pass    
 gv.display=display                          # and announce the procs to modules
+
+def signalHandler(sig, frame):
+  display(seven="Bye!", line1="Shutdown", line2="Bye!")
+  sys.exit(0)
+
+signal.signal(signal.SIGTERM, signalHandler);
+signal.signal(signal.SIGHUP, signalHandler);
 
 ##################################################################################
 # Effects/Filters
@@ -1373,13 +1382,15 @@ try:
         curr_inports = rtmidi2.get_in_ports()   # we do this indirect to catch
         prev_inports = curr_inports             # auto opened virtual ports
     time.sleep(2)
-except KeyboardInterrupt:
+except KeyboardInterrupt as ki:
+    display(line1='Error: %s' % ki, seven='')
     print "\nstopped by user via ctrl-c\n"
-except:
+except Exception as e:
+    display(line1='Error: %s' % e, seven='')
     print "\nstopped by unexpected error"
 finally:
-    display(line1='Stopped', seven='Stopped')
     time.sleep(0.5)
     if USE_GPIO:
         import RPi.GPIO as GPIO
         GPIO.cleanup()
+

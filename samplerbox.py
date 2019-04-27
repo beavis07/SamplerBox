@@ -32,6 +32,7 @@ rootprefix='/home/hans/Documents/SamplerBox'
 if not os.path.isdir(rootprefix):
     rootprefix=""
 sys.path.append('./modules')
+sys.path.append('./modules/lib')
 import gv,getcsv
 
 ########  Define local general functions ########
@@ -77,13 +78,13 @@ def setChord(x,*z):
     if y>-1:                # ignore if undefined
         gv.currscale=0      # playing chords excludes scales
         gv.currchord=y
-        display("")
+        display()
 def setScale(x,*z):
     y=getindex(x,gv.scalename,True)
     if y>-1:                # ignore if undefined
         gv.currchord=0      # playing chords excludes scales
         gv.currscale=y
-        display("")
+        display()
 CCmap=[]
 def setVoice(x, i=0, *z):
     global CCmap
@@ -109,7 +110,7 @@ def setVoice(x, i=0, *z):
                             continue
                     if not found:
                         gv.CCmap.append(gv.CCmapSet[i])             # else add entry
-        display("")
+        display()
 notemap=[]
 def setNotemap(x, *z):
     global notemap
@@ -127,7 +128,7 @@ def setNotemap(x, *z):
     else:
         gv.currnotemap=""
         notemap=[]
-    display("")
+    display()
     
 playingbacktracks=0
 def playBackTrack(x,*z):
@@ -179,7 +180,9 @@ gv.cp.read(CONFIG_LOC + "configuration.txt")
 AUDIO_DEVICE_ID = gv.cp.getint(gv.cfg,"AUDIO_DEVICE_ID".lower())
 USE_SERIALPORT_MIDI = gv.cp.getboolean(gv.cfg,"USE_SERIALPORT_MIDI".lower())
 USE_HD44780_16x2_LCD = gv.cp.getboolean(gv.cfg,"USE_HD44780_16x2_LCD".lower())
-USE_OLED = gv.cp.getboolean(s,"USE_OLED".lower())
+LCD_I2C_PORT = gv.cp.getint(gv.cfg,"LCD_I2C_PORT".lower())
+LCD_I2C_ADDRESS = gv.cp.getint(gv.cfg,"LCD_I2C_ADDRESS".lower())
+USE_OLED = gv.cp.getboolean(gv.cfg,"USE_OLED".lower())
 USE_I2C_7SEGMENTDISPLAY = gv.cp.getboolean(gv.cfg,"USE_I2C_7SEGMENTDISPLAY".lower())
 gv.USE_ALSA_MIXER = gv.cp.getboolean(gv.cfg,"USE_ALSA_MIXER".lower())
 USE_48kHz = gv.cp.getboolean(gv.cfg,"USE_48kHz".lower())
@@ -249,42 +252,43 @@ if USE_HD44780_16x2_LCD:
     USE_GPIO=True
     import lcd_16x2
     lcd = lcd_16x2.HD44780()
-    def display(s2,s7):
-        lcd.display(s2, s7)
-    display(START_SCREEN_MESSAGE)
-
-elif USE_HD44780_16x2_LCD_I2C
-     import lcd_16x2_i2c
-	 lcd = lcd_16x2_i2c.HD44780_I2C()
-     def display(s2,s7=""):
-        lcd.display(s2)
+    def display(seven="", line1="", line2=""):
+        lcd.display(strip(line1 + "\n" + line2))
     
-    display(START_SCREEN_MESSAGE)
+    display(line1=START_SCREEN_MESSAGE)
+
+elif USE_HD44780_16x2_LCD_I2C:
+    import lcd_16x2_i2c
+    lcd = lcd_16x2_i2c.HD44780_I2C(LCD_I2C_ADDRESS, LCD_I2C_PORT)
+    def display(seven="", line1="", line2=""):
+        lcd.display(line1, line2)
+
+    display(line1=START_SCREEN_MESSAGE)
 
 elif USE_OLED:
     USE_GPIO=True
     import OLED
     oled = OLED.oled()
-    def display(s2,s7=""):
-        oled.display(s2)
-    display(START_SCREEN_MESSAGE)
+    def display(seven="", line1="", line2=""):
+        oled.display(strip(line1 + "\n" + line2))
+    display(line1=START_SCREEN_MESSAGE)
 
 elif USE_I2C_7SEGMENTDISPLAY:
     import I2C_7segment
-    def display(s2,s7=""):
-        I2C_7segment.display(s7)
-    display('','----')
+    def display(seven="", line1="", line2=""):
+        I2C_7segment.display(seven)
+    display(seven='----');
 
 elif USE_LEDS:
     USE_GPIO=True
     import LEDs
-    def display(s2,s7=""):
+    def display(seven="", line1="", line2=""):
         LEDs.signal()
     LEDs.green(False)
     LEDs.red(True,True)
 
 else:
-    def display(s2,s7=""):
+    def display(seven="", line1="", line2=""):
         pass    
 gv.display=display                          # and announce the procs to modules
 
@@ -596,7 +600,7 @@ try:
     print 'Opened audio device #%i on %iHz' % (AUDIO_DEVICE_ID, i)
     Cpp.c_filters.setSampleRate(i)   # align the filters
 except:
-    display("Invalid audiodev")
+    display(short="Inv Aud", line1="Invalid audiodev")
     print 'Invalid audio device #%i' % AUDIO_DEVICE_ID
     time.sleep(0.5)
     if USE_GPIO:
@@ -618,7 +622,7 @@ def AllNotesOff(x=0,*z):
     gv.sustainplayingnotes = []
     gv.triggernotes = [128]*128     # fill with unplayable note
     EffectsOff()
-    display("")
+    display()
 def EffectsOff(*z):
     arp.power(False)
     Cpp.FVsetType(0)
@@ -643,7 +647,7 @@ def MidiVolume(CCval,*z):
 def AutoChordOff(x=0,*z):
     gv.currchord = 0
     gv.currscale = 0
-    display("")
+    display()
 def PitchWheel(LSB,MSB=0,*z):   # This allows for single and double precision.
     try: MSB+=0 # If mapped to a double precision pitch wheel, it should work.
     except:     # But the use/result of double precision controllers does not
@@ -945,7 +949,7 @@ def ActuallyLoad():
     if gv.basename:
         if gv.basename == gv.currbase:      # don't waste time reloading a patch
             gv.ActuallyLoading=False
-            display("")
+            display()
             return
         dirname = os.path.join(gv.samplesdir, gv.basename)
 
@@ -992,11 +996,11 @@ def ActuallyLoad():
         #print 'Preset empty: %s' % gv.PRESET
         gv.ActuallyLoading=False
         gv.basename = "%d Empty preset" %gv.PRESET
-        display("","E%03d" % gv.PRESET)
+        display(line1=gv.basename, line2="Empty!", seven="E%03d" % gv.PRESET )
         return
 
     #print 'Preset loading: %s ' % gv.basename
-    display("Loading %s" % gv.basename,"L%03d" % gv.PRESET)
+    display(line1=gv.basename, line2="Loading...", seven="L%03d" % gv.PRESET)
     getcsv.readnotemap(os.path.join(dirname, NOTEMAP_DEF))
     gv.CCmapSet=getcsv.readCCmap(os.path.join(dirname, CTRLMAP_DEF), True)
     definitionfname = os.path.join(dirname, gv.SAMPLESDEF)
@@ -1310,13 +1314,13 @@ def ActuallyLoad():
         if gv.currvoice!=0: gv.sample_mode=gv.voicelist[getindex(gv.currvoice,gv.voicelist)][2]
 
         gv.ActuallyLoading=False
-        display("","%04d" % gv.PRESET)
+        display(line1=gv.basename, line2="Ready.", seven="%04d" % gv.PRESET)
 
     else:
         print 'Preset empty: ' + str(gv.PRESET)
         gv.basename = "%d Empty preset" %gv.PRESET
         gv.ActuallyLoading=False
-        display("","E%03d" % gv.PRESET)
+        display(line1=gv.basename, line2="Empty!", seven="E%03d" % gv.PRESET)
 
 #########################################
 ##  LOAD FIRST SOUNDBANK
@@ -1374,7 +1378,7 @@ except KeyboardInterrupt:
 except:
     print "\nstopped by unexpected error"
 finally:
-    display('Stopped')
+    display(line1="Bye!", seven='Bye!')
     time.sleep(0.5)
     if USE_GPIO:
         import RPi.GPIO as GPIO

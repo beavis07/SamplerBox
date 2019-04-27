@@ -107,3 +107,6 @@ Foot_Down,80,59,# FCB1010 reprogrammed
 #Button7_Inst,9,127,"# LX49 preset ""Inst"""
 #Button8_Inst,11,127,"# LX49 preset ""Inst"""
 #Button9_Inst,65,127,"# LX49 preset ""Inst"""
+
+ProgramUp,61,0, ##CC61/0
+ProgramDown,60,0, ##CC62/0

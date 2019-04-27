@@ -1314,7 +1314,7 @@ def ActuallyLoad():
         if gv.currvoice!=0: gv.sample_mode=gv.voicelist[getindex(gv.currvoice,gv.voicelist)][2]
 
         gv.ActuallyLoading=False
-        display(line1=gv.basename, line2="Ready.", seven="%04d" % gv.PRESET)
+        display(line1=gv.basename, line2="", seven="%04d" % gv.PRESET)
 
     else:
         print 'Preset empty: ' + str(gv.PRESET)
@@ -1378,7 +1378,7 @@ except KeyboardInterrupt:
 except:
     print "\nstopped by unexpected error"
 finally:
-    display(line1="Bye!", seven='Bye!')
+    display(line1='Stopped', seven='Stopped')
     time.sleep(0.5)
     if USE_GPIO:
         import RPi.GPIO as GPIO
